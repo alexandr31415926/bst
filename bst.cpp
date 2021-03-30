@@ -1,6 +1,7 @@
 #include <iostream>
 #include <functional>
 #include <stack>
+#include <queue>
 using namespace std;
 
 namespace BST
@@ -15,7 +16,8 @@ namespace BST
 	{
 	private:
 		using NodeRPtr = Node*;
-		using Nodes = stack<NodeRPtr>;
+		using Stack = stack<NodeRPtr>;
+		using Queue = queue<NodeRPtr>;
 
 		T m_v;
 		NodePtr<T> m_left;
@@ -112,11 +114,11 @@ namespace BST
 		//nonrecursive
 		static void NRPreOrder(Node& p_n, F p_f) // n-l-r
 		{
-			Nodes nodes;
+			Stack nodes;
 			nodes.push(&p_n);
 			while (!nodes.empty())
 			{
-				auto node = nodes.top();
+				const auto node = nodes.top();
 				p_f(*node);
 				nodes.pop();
 				if (node->m_right)
@@ -136,22 +138,66 @@ namespace BST
 				PostOrder(*p_n.m_right, p_f);
 			p_f(p_n);
 		}
-		//nonrecursive
+		//nonrecursive / with 2 stacks
+		static void NRPostOrder2(Node& p_n, F p_f) // l-r-n
+		{
+			Stack nodes;
+			Stack outNodes;
+			auto currentNode = &p_n;
+			nodes.push(currentNode);
+			while (!nodes.empty())
+			{
+				currentNode = nodes.top();
+				nodes.pop();
+				outNodes.push(currentNode);
+				auto nextNode = currentNode->m_left.get();
+				if (nextNode)
+					nodes.push(nextNode);
+				nextNode = currentNode->m_right.get();
+				if (nextNode)
+					nodes.push(nextNode);
+			}
+			while (!outNodes.empty())
+			{
+				p_f(*outNodes.top());
+				outNodes.pop();
+			}
+		}
 		static void NRPostOrder(Node& p_n, F p_f) // l-r-n
 		{
-			Nodes nodes;
+			Stack nodes;
 			auto currentNode = &p_n;
-			bool isDone = false;
-			while (!isDone)
+			do
 			{
-				nodes.push(currentNode);
-				const auto nextNode = currentNode->m_left.get();
-				if (nextNode)
-					currentNode = nextNode;
-				else
-					isDone = true;
-			}
-			p_f(*currentNode);
+				while (currentNode) // Move to leftmost node
+				{
+					// Push node's right child and then node to stack.
+					if (currentNode->m_right)
+						nodes.push(currentNode->m_right.get());
+					nodes.push(currentNode);
+
+					// Set node as root's left child
+					currentNode = currentNode->m_left.get();
+				}
+				// Pop an item from stack and set it as current node    
+				currentNode = nodes.top();
+				nodes.pop();
+
+				// If the popped item has a right child and the right child is not
+				// processed yet, then make sure right child is processed before root
+				if (currentNode->m_right && !nodes.empty() && nodes.top() == currentNode->m_right.get())
+				{
+					nodes.pop();								// remove right child from stack
+					nodes.push(currentNode);					// push node back to stack
+					currentNode = currentNode->m_right.get();	// change current node`so that the right
+																// child is processed next
+				}
+				else // process current node's data and set current node as NULL
+				{
+					p_f(*currentNode);
+					currentNode = nullptr;
+				}
+			} while (!nodes.empty());
 		}
 		// ---------------------------------------------------
 		//inorder
@@ -159,14 +205,63 @@ namespace BST
 		static void InOrder(Node& p_n, F p_f) // l-r-n
 		{
 			if (p_n.m_left)
-				PostOrder(*p_n.m_left, p_f);
+				InOrder(*p_n.m_left, p_f);
 			p_f(p_n);
 			if (p_n.m_right)
-				PostOrder(*p_n.m_right, p_f);
+				InOrder(*p_n.m_right, p_f);
 		}
 		//nonrecursive
 		static void NRInOrder(Node& p_n, F p_f) // l-r-n
 		{
+			Stack nodes;
+			auto currentNode = &p_n;
+			while (currentNode || !nodes.empty())
+			{
+				// Reach the left most Node of the current node
+				while (currentNode)
+				{
+					// place pointer to a tree node on the stack before traversing the node's left subtree
+					nodes.push(currentNode);
+					currentNode = currentNode->m_left.get();
+				}
+				// Current node must be NULL at this point
+				currentNode = nodes.top();
+				nodes.pop();
+				//---------------------------------------------------
+				p_f(*currentNode);
+				//---------------------------------------------------
+				// we have visited the node and its	left subtree. Now, it's right subtree's turn
+				currentNode = currentNode->m_right.get();
+			}
+		}
+		// ---------------------------------------------------
+		//levelorder
+		//recursive
+		static void LevelOrder(Node& p_n, F p_f)
+		{
+		}
+		//nonrecursive
+		static void NRLevelOrder(Node& p_n, F p_f) // l-r-n
+		{
+			Queue nodes;
+			// Enqueue Root and initialize height
+			nodes.push(&p_n);
+
+			while (!nodes.empty())
+			{
+				// Process front of queue and remove it from queue
+				const auto currentNode = nodes.front();
+				p_f(*currentNode);
+				nodes.pop();
+
+				// Enqueue left child
+				if (currentNode->m_left)
+					nodes.push(currentNode->m_left.get());
+
+				// Enqueue right child
+				if (currentNode->m_right)
+					nodes.push(currentNode->m_right.get());
+			}
 		}
 		//============================================================
 		// diameter
@@ -178,17 +273,6 @@ namespace BST
 		}
 		//============================================================
 	};
-	//namespace Service
-	//{
-	//	//============================================================
-	//	template <typename T>
-	//	static NodePtr<T> GetNewNode(const T& p_v)
-	//	{
-	//		return std::make_unique<Node>(p_v);
-	//	}
-	//	template <typename T>
-	//	using F = std::function<void(const Node<T>& p_n)>;
-	//};
 }
 
 using namespace BST;
@@ -265,6 +349,12 @@ void TestOfPostOrder()
 		cout << "\n";
 	}
 	{
+		cout << "Non Recursive, 2 stacks\n";
+		auto n = GetR();
+		NI::NRPostOrder2(*n, f);
+		cout << "\n";
+	}
+	{
 		cout << "Non Recursive\n";
 		auto n = GetR();
 		NI::NRPostOrder(*n, f);
@@ -285,6 +375,23 @@ void TestOfInOrder()
 		cout << "Non Recursive\n";
 		auto n = GetR();
 		NI::NRInOrder(*n, f);
+		cout << "\n";
+	}
+}
+
+void TestOfLevelOrder()
+{
+	cout << "Test of LevelOrder Traversal\n";
+	{
+		cout << "Recursive\n";
+		auto n = GetR();
+		NI::LevelOrder(*n, f);
+		cout << "\n";
+	}
+	{
+		cout << "Non Recursive\n";
+		auto n = GetR();
+		NI::NRLevelOrder(*n, f);
 		cout << "\n";
 	}
 }
@@ -310,6 +417,12 @@ void TestOfRecursiveTraversal()
 		NI::PreOrder(*n, f);
 		cout << "\n";
 	}
+	{
+		cout << "LevelOrder\n";
+		auto n = GetR();
+		NI::LevelOrder(*n, f);
+		cout << "\n";
+	}
 }
 
 void TestOfNonRecursiveTraversal()
@@ -319,6 +432,12 @@ void TestOfNonRecursiveTraversal()
 		cout << "PreOrder\n";
 		auto n = GetR();
 		NI::NRPreOrder(*n, f);
+		cout << "\n";
+	}
+	{
+		cout << "PostOrder, 2 stacks\n";
+		auto n = GetR();
+		NI::NRPostOrder2(*n, f);
 		cout << "\n";
 	}
 	{
@@ -333,15 +452,22 @@ void TestOfNonRecursiveTraversal()
 		NI::NRPreOrder(*n, f);
 		cout << "\n";
 	}
+	{
+		cout << "LevelOrder\n";
+		auto n = GetR();
+		NI::NRLevelOrder(*n, f);
+		cout << "\n";
+	}
 }
 
 int main()
 {
 	TestOfPreOrder();
-	TestOfPostOrder();
-	TestOfInOrder();
-	TestOfRecursiveTraversal();
-	TestOfNonRecursiveTraversal();
+//	TestOfPostOrder();
+//	TestOfInOrder();
+	TestOfLevelOrder();
+//	TestOfRecursiveTraversal();
+//	TestOfNonRecursiveTraversal();
 
 	std::cout << "Hello World!\n";
 }
