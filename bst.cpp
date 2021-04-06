@@ -10,10 +10,6 @@ namespace BST
 	class Node;
 	template <typename T>
 	using NodePtr = std::unique_ptr<Node<T>>;
-	//template <typename T>
-	//using NodeRPtr = Node<T>*;
-	//template <typename T>
-	//using CNodeRPtr = const Node<T>*;
 	//----------------------------------------------------------------------------
 	template <typename T>
 	class Node
@@ -27,8 +23,6 @@ namespace BST
 		using RPtr = Node<T>*;
 		template <typename T>
 		using CRPtr = const RPtr<T>;
-		//typedef Node<T>* RPtr;
-		//typedef const RPtr CRPtr;
 		//--------------------------------------------------------------
 		Node(const T& p_value);
 		//--------------------------------------------------------------
