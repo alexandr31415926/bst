@@ -31,11 +31,11 @@ namespace BST
 		Node& Insert(const T& p_value);
 		//nonrecursive
 		Node& NRInsert(const T& p_value);
-		const T& GetValue() const;
+		const T& Value() const;
 		bool HasLeft() const;
 		bool HasRight() const;
-		CRPtr<T> GetLeft() const;
-		CRPtr<T> GetRight() const;
+		CRPtr<T> Left() const;
+		CRPtr<T> Right() const;
 		//============================================================
 		static NodePtr<T> GetNewNode(const T& p_value);
 		//============================================================
@@ -97,6 +97,8 @@ namespace BST
 		{
 			template <typename T>
 			unsigned Recursive(const Node<T>& p_node);
+			template <typename T>
+			unsigned Recursive(const Node<T>& p_node, unsigned& p_diameter);
 		}
 	}
 }
@@ -175,7 +177,7 @@ Node<T>& Node<T>::NRInsert(const T& p_value)
 }
 
 template<typename T>
-const T& Node<T>::GetValue() const
+const T& Node<T>::Value() const
 {
 	return m_value;
 }
@@ -193,13 +195,13 @@ bool Node<T>::HasRight() const
 }
 
 template<typename T>
-Node<T>::CRPtr<T> Node<T>::GetLeft() const
+Node<T>::CRPtr<T> Node<T>::Left() const
 {
 	return m_left.get();
 }
 
 template<typename T>
-Node::CRPtr<T> Node<T>::GetRight() const
+Node<T>::CRPtr<T> Node<T>::Right() const
 {
 	return m_right.get();
 }
@@ -218,11 +220,11 @@ using namespace BST::Service::Travsersal;
 template<typename T>
 void PreOrder::Recursive(Node<T>& p_node, F<T> p_f) // n-l-r
 {
-	p_f(p_node.GetValue());
+	p_f(p_node.Value());
 	if (p_node.HasLeft())
-		Recursive(*p_node.GetLeft(), p_f);
+		Recursive(*p_node.Left(), p_f);
 	if (p_node.HasRight())
-		Recursive(*p_node.GetRight(), p_f);
+		Recursive(*p_node.Right(), p_f);
 }
 template<typename T>
 void PreOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // n-l-r
@@ -232,12 +234,12 @@ void PreOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // n-l-r
 	while (!nodes.empty())
 	{
 		const auto node = nodes.top();
-		p_f(node->GetValue());
+		p_f(node->Value());
 		nodes.pop();
 		if (node->HasRight())
-			nodes.push(node->GetRight());
+			nodes.push(node->Right());
 		if (node->HasLeft())
-			nodes.push(node->GetLeft());
+			nodes.push(node->Left());
 	}
 }
 // ---------------------------------------------------
@@ -245,10 +247,10 @@ template <typename T>
 void PostOrder::Recursive(Node<T>& p_node, F<T> p_f) // l-r-rt
 {
 	if (p_node.HasLeft())
-		Recursive(*p_node.GetLeft(), p_f);
+		Recursive(*p_node.Left(), p_f);
 	if (p_node.HasRight())
-		Recursive(*p_node.GetRight(), p_f);
-	p_f(p_node.GetValue());
+		Recursive(*p_node.Right(), p_f);
+	p_f(p_node.Value());
 }
 //nonrecursive / with 2 stacks
 template <typename T>
@@ -263,16 +265,16 @@ void PostOrder::NonRecursive2(Node<T>& p_node, F<T> p_f) // l-r-n
 		currentNode = nodes.top();
 		nodes.pop();
 		outNodes.push(currentNode);
-		auto nextNode = currentNode->GetLeft();
+		auto nextNode = currentNode->Left();
 		if (nextNode)
 			nodes.push(nextNode);
-		nextNode = currentNode->GetRight();
+		nextNode = currentNode->Right();
 		if (nextNode)
 			nodes.push(nextNode);
 	}
 	while (!outNodes.empty())
 	{
-		p_f((*outNodes.top()).GetValue());
+		p_f((*outNodes.top()).Value());
 		outNodes.pop();
 	}
 }
@@ -287,11 +289,11 @@ void PostOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 		{
 			// Push node's right child and then node to stack.
 			if (currentNode->HasRight())
-				nodes.push(currentNode->GetRight());
+				nodes.push(currentNode->Right());
 			nodes.push(currentNode);
 
 			// Set node as root's left child
-			currentNode = currentNode->GetLeft();
+			currentNode = currentNode->Left();
 		}
 		// Pop an item from stack and set it as current node    
 		currentNode = nodes.top();
@@ -299,16 +301,16 @@ void PostOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 
 		// If the popped item has a right child and the right child is not
 		// processed yet, then make sure right child is processed before root
-		if (currentNode->HasRight() && !nodes.empty() && nodes.top() == currentNode->GetRight())
+		if (currentNode->HasRight() && !nodes.empty() && nodes.top() == currentNode->Right())
 		{
 			nodes.pop();								// remove right child from stack
 			nodes.push(currentNode);					// push node back to stack
-			currentNode = currentNode->GetRight();	// change current node`so that the right
+			currentNode = currentNode->Right();	// change current node`so that the right
 														// child is processed next
 		}
 		else // process current node's data and set current node as NULL
 		{
-			p_f(currentNode->GetValue());
+			p_f(currentNode->Value());
 			currentNode = nullptr;
 		}
 	} while (!nodes.empty());
@@ -318,10 +320,10 @@ template <typename T>
 void InOrder::Recursive(Node<T>& p_node, F<T> p_f) // l-r-n
 {
 	if (p_node.HasLeft())
-		Recursive(*p_node.GetLeft(), p_f);
-	p_f(p_node.GetValue());
+		Recursive(*p_node.Left(), p_f);
+	p_f(p_node.Value());
 	if (p_node.HasRight())
-		Recursive(*p_node.GetRight(), p_f);
+		Recursive(*p_node.Right(), p_f);
 }
 //nonrecursive
 template <typename T>
@@ -336,16 +338,16 @@ void InOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 		{
 			// place pointer to a tree node on the stack before traversing the node's left subtree
 			nodes.push(currentNode);
-			currentNode = currentNode->GetLeft();
+			currentNode = currentNode->Left();
 		}
 		// Current node must be NULL at this point
 		currentNode = nodes.top();
 		nodes.pop();
 		//---------------------------------------------------
-		p_f(currentNode->GetValue());
+		p_f(currentNode->Value());
 		//---------------------------------------------------
 		// we have visited the node and its	left subtree. Now, it's right subtree's turn
-		currentNode = currentNode->GetRight();
+		currentNode = currentNode->Right();
 	}
 }
 // ---------------------------------------------------
@@ -361,11 +363,11 @@ void LevelOrder::RecursiveFV0(Node<T>& p_node, F<T> p_f)
 		//How to maintain the current layer list is critical here.
 		if (p_result.empty() || p_result.size() < p_level + 1)
 			p_result.push_back(Level());
-		p_result[p_level].push_back(p_node.GetValue());
+		p_result[p_level].push_back(p_node.Value());
 		if (p_node.m_left.get())
-			Dfs(p_result, p_node.GetLeft().get(), p_level + 1);
+			Dfs(p_result, p_node.Left().get(), p_level + 1);
 		if (p_node.m_right.get())
-			Dfs(p_result, p_node.GetRight().get(), p_level + 1);
+			Dfs(p_result, p_node.Right().get(), p_level + 1);
 	};
 
 	Result result;
@@ -385,11 +387,11 @@ void LevelOrder::RecursiveFV(Node<T>& p_node, F<T> p_f)
 		[p_f, &ProcessLevel](const Node<T>& p_node, size_t p_level)
 	{
 		if (p_level == 1)
-			p_f(p_node.GetValue());
+			p_f(p_node.Value());
 		else if (p_level > 1)
 		{
-			ProcessLevel(*p_node.GetLeft(), p_level - 1);
-			ProcessLevel(*p_node.GetRight(), p_level - 1);
+			ProcessLevel(*p_node.Left(), p_level - 1);
+			ProcessLevel(*p_node.Right(), p_level - 1);
 		}
 	};
 	const auto height = GetHeight::Recursive(p_node);
@@ -410,16 +412,16 @@ static void LevelOrder::NonRecursive(Node<T>& p_node, F<T> p_f)
 	{
 		// Process front of queue and remove it from queue
 		const auto currentNode = nodes.front();
-		p_f(currentNode->GetValue());
+		p_f(currentNode->Value());
 		nodes.pop();
 
 		// Enqueue left child
 		if (currentNode->HasLeft())
-			nodes.push(currentNode->GetLeft());
+			nodes.push(currentNode->Left());
 
 		// Enqueue right child
 		if (currentNode->HasRight())
-			nodes.push(currentNode->GetRight());
+			nodes.push(currentNode->Right());
 	}
 }
 
@@ -428,8 +430,8 @@ template <typename T>
 unsigned GetHeight::Recursive(const Node<T>& p_node)
 {
 	unsigned out = 0;
-	const int leftHeight = p_node.HasLeft() ? Recursive(*p_node.GetLeft()) : 0;
-	const int rightHeight = p_node.HasRight() ? Recursive(*p_node.GetRight()) : 0;
+	const int leftHeight = p_node.HasLeft() ? Recursive(*p_node.Left()) : 0;
+	const int rightHeight = p_node.HasRight() ? Recursive(*p_node.Right()) : 0;
 	out = leftHeight > rightHeight ? leftHeight + 1 : rightHeight + 1;
 	return out;
 }
@@ -438,7 +440,20 @@ template <typename T>
 unsigned GetDiameter::Recursive(const Node<T>& p_node)
 {
 	unsigned out = 0;
+	const auto leftHeight = p_node.HasLeft() ? GetHeight::Recursive(*p_node.Left()) : 0;
+	const auto rightHeight = p_node.HasRight() ? GetHeight::Recursive(*p_node.Right()) : 0;
+	const auto leftDiameter = p_node.HasLeft() ? Recursive(*p_node.Left()) : 0;
+	const auto rightDiameter = p_node.HasRight() ? Recursive(*p_node.Right()): 0;
+	out = max(leftHeight + rightHeight + 1, max(leftDiameter, rightDiameter));
 	return out;
+}
+template <typename T>
+unsigned GetDiameter::Recursive(const Node<T>& p_node, unsigned& p_diameter)
+{
+	const auto leftDiameter = p_node.HasLeft() ? Recursive(*p_node.Left(), p_diameter) : 0;
+	const auto rightDiameter = p_node.HasRight() ? Recursive(*p_node.Right(), p_diameter) : 0;
+	p_diameter = max(p_diameter, leftDiameter + rightDiameter);
+	return max(leftDiameter, rightDiameter) + 1;
 }
 //============================================================
 
@@ -629,14 +644,35 @@ void TestOfNonRecursiveTraversal()
 	}
 }
 
+void TestOfRecursiveDiameter()
+{
+	cout << "Test of Recursive Diameter\n";
+	{
+		cout << "Diameter\n";
+		const auto& n = GetR();
+		cout << GetDiameter::Recursive<int>(*n);
+		cout << "\n";
+	}
+	{
+		cout << "Diameter 2\n";
+		const auto& n = GetR();
+		unsigned dim = 0;
+		cout << GetDiameter::Recursive<int>(*n, dim);
+		cout << "\n";
+		cout << dim + 1;
+		cout << "\n";
+	}
+}
+
 int main()
 {
 	//TestOfPreOrder();
 	//TestOfPostOrder();
 	//TestOfInOrder();
 	//TestOfLevelOrder();
-	TestOfRecursiveTraversal();
-	TestOfNonRecursiveTraversal();
+	//TestOfRecursiveTraversal();
+	//TestOfNonRecursiveTraversal();
+	TestOfRecursiveDiameter();
 
 	std::cout << "Hello World!\n";
 }
