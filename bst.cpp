@@ -400,9 +400,9 @@ void LevelOrder::RecursiveFV(Node<T>& p_node, F<T> p_f)
 }
 //nonrecursive
 template <typename T>
-static void NRLevelOrder(const Node<T>& p_node, F<T> p_f)
+static void LevelOrder::NonRecursive(Node<T>& p_node, F<T> p_f)
 {
-	Queue nodes;
+	Queue<T> nodes;
 	// Enqueue Root and initialize height
 	nodes.push(&p_node);
 
@@ -410,16 +410,16 @@ static void NRLevelOrder(const Node<T>& p_node, F<T> p_f)
 	{
 		// Process front of queue and remove it from queue
 		const auto currentNode = nodes.front();
-		p_f((*currentNode).m_value);
+		p_f(currentNode->GetValue());
 		nodes.pop();
 
 		// Enqueue left child
-		if (currentNode->m_left)
-			nodes.push(currentNode->m_left.get());
+		if (currentNode->HasLeft())
+			nodes.push(currentNode->GetLeft());
 
 		// Enqueue right child
-		if (currentNode->m_right)
-			nodes.push(currentNode->m_right.get());
+		if (currentNode->HasRight())
+			nodes.push(currentNode->GetRight());
 	}
 }
 
@@ -618,13 +618,13 @@ void TestOfNonRecursiveTraversal()
 	{
 		cout << "InOrder\n";
 		const auto& n = GetR();
-		InOrder::Recursive<int>(*n, f);
+		InOrder::NonRecursive<int>(*n, f);
 		cout << "\n";
 	}
 	{
 		cout << "LevelOrder\n";
 		const auto& n = GetR();
-		LevelOrder::RecursiveFV<int>(*n, f);
+		LevelOrder::NonRecursive<int>(*n, f);
 		cout << "\n";
 	}
 }
