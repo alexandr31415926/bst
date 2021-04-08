@@ -100,6 +100,11 @@ namespace BST
 			template <typename T>
 			unsigned Recursive(const Node<T>& p_node, unsigned& p_diameter);
 		}
+		namespace GetNumberOfLeaves
+		{
+			template <typename T>
+			unsigned Recursive(Node<T>& p_node);
+		}
 	}
 }
 //----------------------------------------------------------------------------
@@ -456,6 +461,15 @@ unsigned GetDiameter::Recursive(const Node<T>& p_node, unsigned& p_diameter)
 	return max(leftDiameter, rightDiameter) + 1;
 }
 //============================================================
+template <typename T>
+unsigned GetNumberOfLeaves::Recursive(Node<T>& p_node)
+{
+	unsigned counter = 0;
+	Service::Travsersal::PreOrder::Recursive<int>(p_node, [&counter](const int& p_v) { counter++; });
+	return counter;
+}
+//============================================================
+
 
 using namespace BST;
 using namespace BST::Service;
@@ -463,7 +477,7 @@ using namespace BST::Service::Travsersal;
 using NI = Node<int>;
 using NIPtr = NodePtr<int>;
 
-NIPtr GetR()
+NIPtr GetTestData()
 {
 	/*
 		 5
@@ -511,14 +525,14 @@ void TestOfPreOrder()
 	cout << "Test of PreOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto n = GetR();
-		PreOrder::Recursive<int>(*n, f);
+		auto testData = GetTestData();
+		PreOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto n = GetR();
-		PreOrder::NonRecursive<int>(*n, f);
+		auto testData = GetTestData();
+		PreOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 }
@@ -528,20 +542,20 @@ void TestOfPostOrder()
 	cout << "Test of PostOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto n = GetR();
-		PostOrder::Recursive<int>(*n, f);
+		auto testData = GetTestData();
+		PostOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive, 2 stacks\n";
-		auto n = GetR();
-		PostOrder::NonRecursive2<int>(*n, f);
+		auto testData = GetTestData();
+		PostOrder::NonRecursive2<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto n = GetR();
-		PostOrder::NonRecursive<int>(*n, f);
+		auto testData = GetTestData();
+		PostOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 }
@@ -551,14 +565,14 @@ void TestOfInOrder()
 	cout << "Test of InOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto n = GetR();
-		InOrder::Recursive<int>(*n, f);
+		auto testData = GetTestData();
+		InOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto n = GetR();
-		InOrder::NonRecursive<int>(*n, f);
+		auto testData = GetTestData();
+		InOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 }
@@ -568,14 +582,14 @@ void TestOfLevelOrder()
 	cout << "Test of LevelOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto n = GetR();
-		LevelOrder::RecursiveFV<int>(*n, f);
+		auto testData = GetTestData();
+		LevelOrder::RecursiveFV<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto n = GetR();
-		LevelOrder::RecursiveFV<int>(*n, f);
+		auto testData = GetTestData();
+		LevelOrder::RecursiveFV<int>(*testData, f);
 		cout << "\n";
 	}
 }
@@ -585,26 +599,26 @@ void TestOfRecursiveTraversal()
 	cout << "Test of Recursive Traversal\n";
 	{
 		cout << "PreOrder\n";
-		const auto& n = GetR();
-		PreOrder::Recursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		PreOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "PostOrder\n";
-		const auto& n = GetR();
-		PostOrder::Recursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		PostOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "InOrder\n";
-		const auto& n = GetR();
-		InOrder::Recursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		InOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "LevelOrder\n";
-		const auto& n = GetR();
-		LevelOrder::RecursiveFV<int>(*n, f);
+		const auto& testData = GetTestData();
+		LevelOrder::RecursiveFV<int>(*testData, f);
 		cout << "\n";
 	}
 }
@@ -614,32 +628,32 @@ void TestOfNonRecursiveTraversal()
 	cout << "Test of Non Recursive Traversal\n";
 	{
 		cout << "PreOrder\n";
-		const auto& n = GetR();
-		PreOrder::NonRecursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		PreOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "PostOrder, 2 stacks\n";
-		const auto& n = GetR();
-		PostOrder::NonRecursive2<int>(*n, f);
+		const auto& testData = GetTestData();
+		PostOrder::NonRecursive2<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "PostOrder\n";
-		const auto& n = GetR();
-		PostOrder::NonRecursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		PostOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "InOrder\n";
-		const auto& n = GetR();
-		InOrder::NonRecursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		InOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "LevelOrder\n";
-		const auto& n = GetR();
-		LevelOrder::NonRecursive<int>(*n, f);
+		const auto& testData = GetTestData();
+		LevelOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 }
@@ -649,17 +663,28 @@ void TestOfRecursiveDiameter()
 	cout << "Test of Recursive Diameter\n";
 	{
 		cout << "Diameter\n";
-		const auto& n = GetR();
-		cout << GetDiameter::Recursive<int>(*n);
+		const auto& testData = GetTestData();
+		cout << GetDiameter::Recursive<int>(*testData);
 		cout << "\n";
 	}
 	{
 		cout << "Diameter 2\n";
-		const auto& n = GetR();
+		const auto& testData = GetTestData();
 		unsigned dim = 0;
-		cout << GetDiameter::Recursive<int>(*n, dim);
+		cout << GetDiameter::Recursive<int>(*testData, dim);
 		cout << "\n";
 		cout << dim + 1;
+		cout << "\n";
+	}
+}
+
+void TestOfRecursiveGetNumberOfLeaves()
+{
+	cout << "Test of Recursive GetNumberOfLeaves\n";
+	{
+		cout << "NumberOfLeaves\n";
+		const auto testData = GetTestData();
+		cout << GetNumberOfLeaves::Recursive<int>(*testData);
 		cout << "\n";
 	}
 }
@@ -672,7 +697,8 @@ int main()
 	//TestOfLevelOrder();
 	//TestOfRecursiveTraversal();
 	//TestOfNonRecursiveTraversal();
-	TestOfRecursiveDiameter();
+	//TestOfRecursiveDiameter();
+	TestOfRecursiveGetNumberOfLeaves();
 
 	std::cout << "Hello World!\n";
 }
