@@ -48,7 +48,8 @@ namespace BST
 		using Queue = queue<Node::RPtr<T>>;
 
 		template <typename T>
-		using F = std::function<void(const T& p_value)>;
+		//using F = std::function<void(const T& p_value)>;
+		using F = std::function<void(const Node<T>& p_n)>;
 		namespace Travsersal
 		{
 			namespace PreOrder // n-l-r
@@ -225,7 +226,7 @@ using namespace BST::Service::Travsersal;
 template<typename T>
 void PreOrder::Recursive(Node<T>& p_node, F<T> p_f) // n-l-r
 {
-	p_f(p_node.Value());
+	p_f(p_node);
 	if (p_node.HasLeft())
 		Recursive(*p_node.Left(), p_f);
 	if (p_node.HasRight())
@@ -239,7 +240,7 @@ void PreOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // n-l-r
 	while (!nodes.empty())
 	{
 		const auto node = nodes.top();
-		p_f(node->Value());
+		p_f(*node);
 		nodes.pop();
 		if (node->HasRight())
 			nodes.push(node->Right());
@@ -255,7 +256,7 @@ void PostOrder::Recursive(Node<T>& p_node, F<T> p_f) // l-r-rt
 		Recursive(*p_node.Left(), p_f);
 	if (p_node.HasRight())
 		Recursive(*p_node.Right(), p_f);
-	p_f(p_node.Value());
+	p_f(p_node);
 }
 //nonrecursive / with 2 stacks
 template <typename T>
@@ -279,7 +280,7 @@ void PostOrder::NonRecursive2(Node<T>& p_node, F<T> p_f) // l-r-n
 	}
 	while (!outNodes.empty())
 	{
-		p_f((*outNodes.top()).Value());
+		p_f(*outNodes.top());
 		outNodes.pop();
 	}
 }
@@ -315,7 +316,7 @@ void PostOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 		}
 		else // process current node's data and set current node as NULL
 		{
-			p_f(currentNode->Value());
+			p_f(*currentNode);
 			currentNode = nullptr;
 		}
 	} while (!nodes.empty());
@@ -326,7 +327,7 @@ void InOrder::Recursive(Node<T>& p_node, F<T> p_f) // l-r-n
 {
 	if (p_node.HasLeft())
 		Recursive(*p_node.Left(), p_f);
-	p_f(p_node.Value());
+	p_f(p_node);
 	if (p_node.HasRight())
 		Recursive(*p_node.Right(), p_f);
 }
@@ -349,7 +350,7 @@ void InOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 		currentNode = nodes.top();
 		nodes.pop();
 		//---------------------------------------------------
-		p_f(currentNode->Value());
+		p_f(*currentNode);
 		//---------------------------------------------------
 		// we have visited the node and its	left subtree. Now, it's right subtree's turn
 		currentNode = currentNode->Right();
@@ -392,7 +393,7 @@ void LevelOrder::RecursiveFV(Node<T>& p_node, F<T> p_f)
 		[p_f, &ProcessLevel](const Node<T>& p_node, size_t p_level)
 	{
 		if (p_level == 1)
-			p_f(p_node.Value());
+			p_f(p_node);
 		else if (p_level > 1)
 		{
 			ProcessLevel(*p_node.Left(), p_level - 1);
@@ -417,7 +418,7 @@ static void LevelOrder::NonRecursive(Node<T>& p_node, F<T> p_f)
 	{
 		// Process front of queue and remove it from queue
 		const auto currentNode = nodes.front();
-		p_f(currentNode->Value());
+		p_f(*currentNode);
 		nodes.pop();
 
 		// Enqueue left child
@@ -448,7 +449,7 @@ unsigned GetDiameter::Recursive(const Node<T>& p_node)
 	const auto leftHeight = p_node.HasLeft() ? GetHeight::Recursive(*p_node.Left()) : 0;
 	const auto rightHeight = p_node.HasRight() ? GetHeight::Recursive(*p_node.Right()) : 0;
 	const auto leftDiameter = p_node.HasLeft() ? Recursive(*p_node.Left()) : 0;
-	const auto rightDiameter = p_node.HasRight() ? Recursive(*p_node.Right()): 0;
+	const auto rightDiameter = p_node.HasRight() ? Recursive(*p_node.Right()) : 0;
 	out = max(leftHeight + rightHeight + 1, max(leftDiameter, rightDiameter));
 	return out;
 }
@@ -465,7 +466,7 @@ template <typename T>
 unsigned GetNumberOfLeaves::Recursive(Node<T>& p_node)
 {
 	unsigned counter = 0;
-	Service::Travsersal::PreOrder::Recursive<int>(p_node, [&counter](const int& p_v) { counter++; });
+	Service::Travsersal::PreOrder::Recursive<int>(p_node, [&counter](const Node<int>& p_node) { counter++; });
 	return counter;
 }
 //============================================================
@@ -515,9 +516,9 @@ NIPtr GetRR()
 	return n;
 };
 
-void f(const int& p_value)
+void f(const NI& p_node)
 {
-	cout << p_value << " ";
+	cout << p_node.Value() << " ";
 };
 
 void TestOfPreOrder()
@@ -691,13 +692,13 @@ void TestOfRecursiveGetNumberOfLeaves()
 
 int main()
 {
-	//TestOfPreOrder();
-	//TestOfPostOrder();
-	//TestOfInOrder();
-	//TestOfLevelOrder();
-	//TestOfRecursiveTraversal();
-	//TestOfNonRecursiveTraversal();
-	//TestOfRecursiveDiameter();
+	TestOfPreOrder();
+	TestOfPostOrder();
+	TestOfInOrder();
+	TestOfLevelOrder();
+	TestOfRecursiveTraversal();
+	TestOfNonRecursiveTraversal();
+	TestOfRecursiveDiameter();
 	TestOfRecursiveGetNumberOfLeaves();
 
 	std::cout << "Hello World!\n";
