@@ -55,7 +55,7 @@ namespace BST
 			namespace PreOrder // n-l-r
 			{
 				template <typename T>
-				static void Recursive(Node<T>& p_node, F<T> p_f);
+				static void Recursive(const Node<T>& p_node, F<T> p_f);
 				template <typename T>
 				static void NonRecursive(Node<T>& p_node, F<T> p_f);
 			}
@@ -63,7 +63,7 @@ namespace BST
 			namespace PostOrder // l-r-rt
 			{
 				template <typename T>
-				static void Recursive(Node<T>& p_node, F<T> p_f);
+				static void Recursive(const Node<T>& p_node, F<T> p_f);
 				template <typename T>
 				static void NonRecursive2(Node<T>& p_node, F<T> p_f);
 				template <typename T>
@@ -73,7 +73,7 @@ namespace BST
 			namespace InOrder // l-r-n
 			{
 				template <typename T>
-				static void Recursive(Node<T>& p_node, F<T> p_f);
+				static void Recursive(const Node<T>& p_node, F<T> p_f);
 				//nonrecursive
 				template <typename T>
 				static void NonRecursive(Node<T>& p_node, F<T> p_f);
@@ -82,9 +82,9 @@ namespace BST
 			namespace LevelOrder
 			{
 				template <typename T>
-				static void RecursiveFV0(Node<T>& p_node, F<T> p_f);
+				static void RecursiveFV0(const Node<T>& p_node, F<T> p_f);
 				template <typename T>
-				static void RecursiveFV(Node<T>& p_node, F<T> p_f);
+				static void RecursiveFV(const Node<T>& p_node, F<T> p_f);
 				template <typename T>
 				static void NonRecursive(Node<T>& p_node, F<T> p_f);
 			}
@@ -104,7 +104,12 @@ namespace BST
 		namespace GetNumberOfLeaves
 		{
 			template <typename T>
-			unsigned Recursive(Node<T>& p_node);
+			unsigned Recursive(const Node<T>& p_node);
+		}
+		namespace AreEqual
+		{
+			template <typename T>
+			bool Recursive(const Node<T>& p_node1, const Node<T>& p_node2);
 		}
 	}
 }
@@ -224,7 +229,7 @@ using namespace BST::Service;
 using namespace BST::Service::Travsersal;
 
 template<typename T>
-void PreOrder::Recursive(Node<T>& p_node, F<T> p_f) // n-l-r
+void PreOrder::Recursive(const Node<T>& p_node, F<T> p_f) // n-l-r
 {
 	p_f(p_node);
 	if (p_node.HasLeft())
@@ -250,7 +255,7 @@ void PreOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // n-l-r
 }
 // ---------------------------------------------------
 template <typename T>
-void PostOrder::Recursive(Node<T>& p_node, F<T> p_f) // l-r-rt
+void PostOrder::Recursive(const Node<T>& p_node, F<T> p_f) // l-r-rt
 {
 	if (p_node.HasLeft())
 		Recursive(*p_node.Left(), p_f);
@@ -323,7 +328,7 @@ void PostOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 }
 // ---------------------------------------------------
 template <typename T>
-void InOrder::Recursive(Node<T>& p_node, F<T> p_f) // l-r-n
+void InOrder::Recursive(const Node<T>& p_node, F<T> p_f) // l-r-n
 {
 	if (p_node.HasLeft())
 		Recursive(*p_node.Left(), p_f);
@@ -359,7 +364,7 @@ void InOrder::NonRecursive(Node<T>& p_node, F<T> p_f) // l-r-n
 // ---------------------------------------------------
 //first version
 template <typename T>
-void LevelOrder::RecursiveFV0(Node<T>& p_node, F<T> p_f)
+void LevelOrder::RecursiveFV0(const Node<T>& p_node, F<T> p_f)
 {
 	using Level = vector<T>;
 	using Result = vector<Level>;
@@ -387,7 +392,7 @@ void LevelOrder::RecursiveFV0(Node<T>& p_node, F<T> p_f)
 	}
 }
 template <typename T>
-void LevelOrder::RecursiveFV(Node<T>& p_node, F<T> p_f)
+void LevelOrder::RecursiveFV(const Node<T>& p_node, F<T> p_f)
 {
 	std::function<void(const Node<T>& p_node, size_t p_level)> ProcessLevel =
 		[p_f, &ProcessLevel](const Node<T>& p_node, size_t p_level)
@@ -463,14 +468,28 @@ unsigned GetDiameter::Recursive(const Node<T>& p_node, unsigned& p_diameter)
 }
 //============================================================
 template <typename T>
-unsigned GetNumberOfLeaves::Recursive(Node<T>& p_node)
+unsigned GetNumberOfLeaves::Recursive(const Node<T>& p_node)
 {
 	unsigned counter = 0;
-	Service::Travsersal::PreOrder::Recursive<int>(p_node, [&counter](const Node<int>& p_node) { counter++; });
+	Service::Travsersal::PreOrder::Recursive<T>(p_node, [&counter](const Node<T>& p_node) { counter++; });
 	return counter;
 }
 //============================================================
-
+template <typename T>
+bool AreEqual::Recursive(const Node<T>& p_node1, const Node<T>& p_node2)
+{
+	bool out = true;
+	if (!p_node1.HasLeft() && !p_node2.HasLeft() && !p_node1.HasRight() && !p_node2.HasRight())
+		out = true;
+	else if (p_node1.HasLeft() && p_node2.HasLeft() && p_node1.HasRight() && p_node2.HasRight())
+		out = p_node1.Value() == p_node2.Value()
+			&& Recursive(*p_node1.Left(), *p_node2.Left())
+			&& Recursive(*p_node1.Right(), *p_node2.Right());
+	else
+		out = false;
+	return out;
+}
+//============================================================
 
 using namespace BST;
 using namespace BST::Service;
@@ -478,7 +497,7 @@ using namespace BST::Service::Travsersal;
 using NI = Node<int>;
 using NIPtr = NodePtr<int>;
 
-NIPtr GetTestData()
+NIPtr GetTestData1()
 {
 	/*
 		 5
@@ -497,7 +516,7 @@ NIPtr GetTestData()
 	return n;
 };
 
-NIPtr GetRR()
+NIPtr GetTestData1NR()
 {
 	/*
 	 5
@@ -526,13 +545,13 @@ void TestOfPreOrder()
 	cout << "Test of PreOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		PreOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		PreOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
@@ -543,19 +562,19 @@ void TestOfPostOrder()
 	cout << "Test of PostOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		PostOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive, 2 stacks\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		PostOrder::NonRecursive2<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		PostOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
@@ -566,13 +585,13 @@ void TestOfInOrder()
 	cout << "Test of InOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		InOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		InOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
@@ -583,13 +602,13 @@ void TestOfLevelOrder()
 	cout << "Test of LevelOrder Traversal\n";
 	{
 		cout << "Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		LevelOrder::RecursiveFV<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "Non Recursive\n";
-		auto testData = GetTestData();
+		auto testData = GetTestData1();
 		LevelOrder::RecursiveFV<int>(*testData, f);
 		cout << "\n";
 	}
@@ -600,25 +619,25 @@ void TestOfRecursiveTraversal()
 	cout << "Test of Recursive Traversal\n";
 	{
 		cout << "PreOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		PreOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "PostOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		PostOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "InOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		InOrder::Recursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "LevelOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		LevelOrder::RecursiveFV<int>(*testData, f);
 		cout << "\n";
 	}
@@ -629,31 +648,31 @@ void TestOfNonRecursiveTraversal()
 	cout << "Test of Non Recursive Traversal\n";
 	{
 		cout << "PreOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		PreOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "PostOrder, 2 stacks\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		PostOrder::NonRecursive2<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "PostOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		PostOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "InOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		InOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
 	{
 		cout << "LevelOrder\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		LevelOrder::NonRecursive<int>(*testData, f);
 		cout << "\n";
 	}
@@ -664,13 +683,13 @@ void TestOfRecursiveDiameter()
 	cout << "Test of Recursive Diameter\n";
 	{
 		cout << "Diameter\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		cout << GetDiameter::Recursive<int>(*testData);
 		cout << "\n";
 	}
 	{
 		cout << "Diameter 2\n";
-		const auto& testData = GetTestData();
+		const auto& testData = GetTestData1();
 		unsigned dim = 0;
 		cout << GetDiameter::Recursive<int>(*testData, dim);
 		cout << "\n";
@@ -684,8 +703,20 @@ void TestOfRecursiveGetNumberOfLeaves()
 	cout << "Test of Recursive GetNumberOfLeaves\n";
 	{
 		cout << "NumberOfLeaves\n";
-		const auto testData = GetTestData();
+		const auto testData = GetTestData1();
 		cout << GetNumberOfLeaves::Recursive<int>(*testData);
+		cout << "\n";
+	}
+}
+
+void TestOfRecursiveAreEqual()
+{
+	cout << "Test of Recursive AreEqual\n";
+	{
+		cout << "AreEqual\n";
+		const auto testData1 = GetTestData1();
+		const auto testData2 = GetTestData1();
+		cout << (AreEqual::Recursive<int>(*testData1, *testData2) ? "yes" : "no");
 		cout << "\n";
 	}
 }
@@ -700,6 +731,7 @@ int main()
 	TestOfNonRecursiveTraversal();
 	TestOfRecursiveDiameter();
 	TestOfRecursiveGetNumberOfLeaves();
+	TestOfRecursiveAreEqual();
 
 	std::cout << "Hello World!\n";
 }
