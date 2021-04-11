@@ -2,6 +2,7 @@
 #include <functional>
 #include <stack>
 #include <queue>
+#include <vector>
 using namespace std;
 
 namespace BST
@@ -48,7 +49,6 @@ namespace BST
 		using Queue = queue<Node::RPtr<T>>;
 
 		template <typename T>
-		//using F = std::function<void(const T& p_value)>;
 		using F = std::function<void(const Node<T>& p_n)>;
 		namespace Travsersal
 		{
@@ -110,6 +110,16 @@ namespace BST
 		{
 			template <typename T>
 			bool Recursive(const Node<T>& p_node1, const Node<T>& p_node2);
+		}
+		namespace PrintAllPaths
+		{
+			template <typename T>
+			void Recursive(const Node<T>& p_node);
+		}
+		namespace HasSum
+		{
+			template <typename T>
+			bool Recursive(const Node<T>& p_node, const T& p_sum);
 		}
 	}
 }
@@ -490,6 +500,46 @@ bool AreEqual::Recursive(const Node<T>& p_node1, const Node<T>& p_node2)
 	return out;
 }
 //============================================================
+template <typename T>
+void PrintAllPaths::Recursive<T>(const Node<T>& p_node)
+{
+	using Path = std::vector<T>;
+	Path path;
+	std::function<void(const Node<T>& p_node, Path p_path)> printAllPaths = [&](const Node<T>& p_node, Path p_path)
+	{
+		p_path.push_back(p_node.Value());
+		if (!p_node.HasLeft() && !p_node.HasRight())
+		{
+			for (const auto& p : p_path)
+				cout << p << " ";
+			cout << endl;
+		}
+		else
+		{
+			if (p_node.HasLeft())
+				printAllPaths(*p_node.Left(), p_path);
+			if (p_node.HasRight())
+				printAllPaths(*p_node.Right(), p_path);
+		}
+	};
+	printAllPaths(p_node, path);
+}
+//============================================================
+template <typename T>
+bool HasSum::Recursive(const Node<T>& p_node, const T& p_sum)
+{
+	const auto remainingSum = p_sum - p_node.Value();
+	if (!p_node.HasLeft() && !p_node.HasRight())
+		return remainingSum == 0;
+	if (p_node.HasLeft() && p_node.HasRight())
+		return (Recursive(*p_node.Left(), remainingSum) || Recursive(*p_node.Right(), remainingSum));
+	else          
+		if (p_node.HasLeft())
+			return Recursive(*p_node.Left(), remainingSum);
+		else             
+			return Recursive(*p_node.Right(), remainingSum);
+}
+//============================================================
 
 using namespace BST;
 using namespace BST::Service;
@@ -532,6 +582,29 @@ NIPtr GetTestData1NR()
 	auto& n8 = n->Insert(8);
 	n8.Insert(6);
 	n8.Insert(9);
+	return n;
+};
+
+NIPtr GetTestData2()
+{
+	/*
+		 5
+	   /   \
+	  3      8
+	 / \    / \
+	2   4  6   9
+   / \
+  1   10
+	*/
+	auto n = NI::GetNewNode(5);
+	auto& n3 = n->NRInsert(3);
+	auto& n2 = n3.NRInsert(2);
+	n2.NRInsert(1);
+	n2.NRInsert(10);
+	n3.NRInsert(4);
+	auto& n8 = n->NRInsert(8);
+	n8.NRInsert(6);
+	n8.NRInsert(9);
 	return n;
 };
 
@@ -714,24 +787,59 @@ void TestOfRecursiveAreEqual()
 	cout << "Test of Recursive AreEqual\n";
 	{
 		cout << "AreEqual\n";
-		const auto testData1 = GetTestData1();
-		const auto testData2 = GetTestData1();
-		cout << (AreEqual::Recursive<int>(*testData1, *testData2) ? "yes" : "no");
+		const auto testData11 = GetTestData1();
+		const auto testData12 = GetTestData1();
+		cout << (AreEqual::Recursive<int>(*testData11, *testData12) ? "yes" : "no");
 		cout << "\n";
+		const auto testData21 = GetTestData1();
+		const auto testData22 = GetTestData2();
+		cout << (AreEqual::Recursive<int>(*testData21, *testData22) ? "yes" : "no");
+		cout << "\n";
+	}
+}
+
+void TestOfHasSum()
+{
+	cout << "Test of Recursive HasSum\n";
+	{
+		cout << "HasSum\n";
+		const auto testData1 = GetTestData1();
+		{
+			const auto sum = 12;
+			cout << sum << " " << (HasSum::Recursive(*testData1, sum) ? "yes" : "no");
+			cout << "\n";
+		}
+		{
+			const auto sum = 11;
+			cout << sum << " " << (HasSum::Recursive(*testData1, sum) ? "yes" : "no");
+			cout << "\n";
+		}
+	}
+}
+
+void TestOfPrintAllPaths()
+{
+	cout << "Test of Recursive PrintAllPaths\n";
+	{
+		cout << "PrintAllPaths\n";
+		const auto testData = GetTestData1();
+		PrintAllPaths::Recursive<int>(*testData);
 	}
 }
 
 int main()
 {
-	TestOfPreOrder();
-	TestOfPostOrder();
-	TestOfInOrder();
-	TestOfLevelOrder();
-	TestOfRecursiveTraversal();
-	TestOfNonRecursiveTraversal();
-	TestOfRecursiveDiameter();
-	TestOfRecursiveGetNumberOfLeaves();
-	TestOfRecursiveAreEqual();
+	//TestOfPreOrder();
+	//TestOfPostOrder();
+	//TestOfInOrder();
+	//TestOfLevelOrder();
+	//TestOfRecursiveTraversal();
+	//TestOfNonRecursiveTraversal();
+	//TestOfRecursiveDiameter();
+	//TestOfRecursiveGetNumberOfLeaves();
+	//TestOfRecursiveAreEqual();
+	//TestOfPrintAllPaths();
+	TestOfHasSum();
 
 	std::cout << "Hello World!\n";
 }
